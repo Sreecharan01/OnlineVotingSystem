@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}Manage Candidates - ElectVote Admin{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg fixed-top glass-navbar scrolled">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-vote-yea me-2"></i>Elect<span class="text-accent">Vote</span><span class="badge bg-danger rounded-pill ms-2 small">Admin</span></a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav"><span class="navbar-toggler-icon"></span></button>
+        <div class="collapse navbar-collapse" id="adminNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-tachometer-alt me-1"></i>Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_users') }}"><i class="fas fa-users me-1"></i>Users</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_elections') }}"><i class="fas fa-poll me-1"></i>Elections</a></li>
+                <li class="nav-item"><a class="nav-link active" href="{{ url_for('admin.manage_candidates') }}"><i class="fas fa-user-tie me-1"></i>Candidates</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.analytics') }}"><i class="fas fa-chart-line me-1"></i>Analytics</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.settings') }}"><i class="fas fa-cog me-1"></i>Settings</a></li>
+                <li class="nav-item ms-lg-2"><button class="btn btn-sm btn-outline-secondary rounded-pill me-2" onclick="toggleDarkMode()"><i class="fas fa-moon"></i></button></li>
+                <li class="nav-item"><a class="btn btn-sm btn-outline-danger rounded-pill" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-1"></i>Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-content" style="padding-top: 80px;">
+    <div class="container-fluid px-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <h3 class="fw-800 mb-0"><i class="fas fa-user-tie me-2"></i>Manage Candidates <span class="badge bg-primary rounded-pill">{{ total }}</span></h3>
+            <div class="d-flex gap-2">
+                <form class="d-flex gap-2" method="GET">
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" name="search" placeholder="Search..." value="{{ search }}">
+                    </div>
+                    <button class="btn btn-primary rounded-pill" type="submit"><i class="fas fa-search"></i></button>
+                </form>
+                <button class="btn btn-success rounded-pill" data-bs-toggle="modal" data-bs-target="#createCandidateModal">
+                    <i class="fas fa-plus me-1"></i>Add Candidate
+                </button>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            {% for candidate in candidates %}
+            <div class="col-md-6 col-lg-4">
+                <div class="glass-card h-100 p-4 candidate-profile-card">
+                    <div class="text-center">
+                        {% if candidate.photo %}
+                            <img src="{{ url_for('static', filename='uploads/' + candidate.photo) }}" class="rounded-circle mb-3" style="width:80px;height:80px;object-fit:cover;">
+                        {% else %}
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width:80px;height:80px;">
+                                <i class="fas fa-user fa-2x"></i>
+                            </div>
+                        {% endif %}
+                        <h5 class="fw-700 mb-1">{{ candidate.name }}</h5>
+                        {% if candidate.party %}<span class="badge bg-primary bg-opacity-10 text-primary rounded-pill mb-1">{{ candidate.party }}</span>{% endif %}
+                        {% if candidate.symbol %}<span class="badge bg-warning bg-opacity-10 text-warning rounded-pill mb-1">{{ candidate.symbol }}</span>{% endif %}
+                        <p class="text-muted small mt-2">{{ candidate.description[:80] if candidate.description else 'No description' }}</p>
+                        <small class="text-muted d-block mb-3">Election: {{ election_map.get(candidate.election_id, 'Unknown') }}</small>
+                    </div>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button class="btn btn-outline-primary btn-sm rounded-pill" onclick="editCandidate('{{ candidate.id }}', '{{ candidate.name }}', '{{ candidate.party }}', '{{ candidate.symbol }}', '{{ candidate.description }}')">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </button>
+                        <a href="{{ url_for('admin.delete_candidate', candidate_id=candidate.id) }}" class="btn btn-outline-danger btn-sm rounded-pill" onclick="return confirm('Delete this candidate?');">
+                            <i class="fas fa-trash me-1"></i>Delete
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if not candidates %}
+        <div class="glass-card p-5 text-center">
+            <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No Candidates Found</h5>
+            <p class="text-muted">Click "Add Candidate" to create your first candidate.</p>
+        </div>
+        {% endif %}
+
+        {% if total_pages > 1 %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item {% if page <= 1 %}disabled{% endif %}"><a class="page-link rounded-pill" href="?page={{ page-1 }}&search={{ search }}">&laquo;</a></li>
+                {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {% if p == page %}active{% endif %}"><a class="page-link rounded-pill" href="?page={{ p }}&search={{ search }}">{{ p }}</a></li>
+                {% endfor %}
+                <li class="page-item {% if page >= total_pages %}disabled{% endif %}"><a class="page-link rounded-pill" href="?page={{ page+1 }}&search={{ search }}">&raquo;</a></li>
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Create Candidate Modal -->
+<div class="modal fade" id="createCandidateModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content glass-card border-0">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-700"><i class="fas fa-user-plus me-2 text-success"></i>Add New Candidate</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="create">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-600">Select Election</label>
+                            <select class="form-select" name="election_id" required>
+                                <option value="">Choose Election...</option>
+                                {% for e in elections %}
+                                <option value="{{ e.id }}">{{ e.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-600">Candidate Name</label>
+                            <input type="text" class="form-control" name="name" required placeholder="Full name">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-600">Party</label>
+                            <input type="text" class="form-control" name="party" placeholder="e.g., Democratic Party">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-600">Party Symbol</label>
+                            <input type="text" class="form-control" name="symbol" placeholder="e.g., 🐘 or symbol name">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-600">Description</label>
+                            <textarea class="form-control" name="description" rows="2" placeholder="Brief bio or manifesto..."></textarea>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-600">Candidate Photo</label>
+                            <input type="file" class="form-control" name="photo" accept="image/*">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success rounded-pill"><i class="fas fa-plus me-1"></i>Add Candidate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Candidate Modal -->
+<div class="modal fade" id="editCandidateModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content glass-card border-0">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-700"><i class="fas fa-edit me-2 text-primary"></i>Edit Candidate</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="candidate_id" id="editCandId">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-600">Candidate Name</label>
+                            <input type="text" class="form-control" name="name" id="editCandName" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-600">Party</label>
+                            <input type="text" class="form-control" name="party" id="editCandParty">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-600">Symbol</label>
+                            <input type="text" class="form-control" name="symbol" id="editCandSymbol">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-600">Update Photo</label>
+                            <input type="file" class="form-control" name="photo" accept="image/*">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-600">Description</label>
+                            <textarea class="form-control" name="description" id="editCandDesc" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill"><i class="fas fa-save me-1"></i>Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function editCandidate(id, name, party, symbol, desc) {
+    document.getElementById('editCandId').value = id;
+    document.getElementById('editCandName').value = name;
+    document.getElementById('editCandParty').value = party;
+    document.getElementById('editCandSymbol').value = symbol;
+    document.getElementById('editCandDesc').value = desc;
+    new bootstrap.Modal(document.getElementById('editCandidateModal')).show();
+}
+</script>
+{% endblock %}

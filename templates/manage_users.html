@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Manage Users - ElectVote Admin{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg fixed-top glass-navbar scrolled">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-vote-yea me-2"></i>Elect<span class="text-accent">Vote</span><span class="badge bg-danger rounded-pill ms-2 small">Admin</span></a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav"><span class="navbar-toggler-icon"></span></button>
+        <div class="collapse navbar-collapse" id="adminNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-tachometer-alt me-1"></i>Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link active" href="{{ url_for('admin.manage_users') }}"><i class="fas fa-users me-1"></i>Users</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_elections') }}"><i class="fas fa-poll me-1"></i>Elections</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_candidates') }}"><i class="fas fa-user-tie me-1"></i>Candidates</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.analytics') }}"><i class="fas fa-chart-line me-1"></i>Analytics</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.settings') }}"><i class="fas fa-cog me-1"></i>Settings</a></li>
+                <li class="nav-item ms-lg-2"><button class="btn btn-sm btn-outline-secondary rounded-pill me-2" onclick="toggleDarkMode()"><i class="fas fa-moon"></i></button></li>
+                <li class="nav-item"><a class="btn btn-sm btn-outline-danger rounded-pill" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-1"></i>Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-content" style="padding-top: 80px;">
+    <div class="container-fluid px-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <h3 class="fw-800 mb-0"><i class="fas fa-users me-2"></i>Manage Users <span class="badge bg-primary rounded-pill">{{ total }}</span></h3>
+            <form class="d-flex gap-2" method="GET">
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" name="search" placeholder="Search users..." value="{{ search }}">
+                </div>
+                <select class="form-select" name="role" style="width: auto;" onchange="this.form.submit()">
+                    <option value="all" {% if role_filter == 'all' %}selected{% endif %}>All Roles</option>
+                    <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admin</option>
+                    <option value="voter" {% if role_filter == 'voter' %}selected{% endif %}>Voter</option>
+                </select>
+                <button class="btn btn-primary rounded-pill" type="submit"><i class="fas fa-filter"></i></button>
+            </form>
+        </div>
+
+        <div class="glass-card p-0 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-3">User</th>
+                            <th class="px-4 py-3">Email</th>
+                            <th class="px-4 py-3">Role</th>
+                            <th class="px-4 py-3">Status</th>
+                            <th class="px-4 py-3">Joined</th>
+                            <th class="px-4 py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td class="px-4 py-3">
+                                <div class="d-flex align-items-center">
+                                    {% if user.profile_picture %}
+                                        <img src="{{ url_for('static', filename='uploads/' + user.profile_picture) }}" class="rounded-circle me-2" style="width:35px;height:35px;object-fit:cover;">
+                                    {% else %}
+                                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width:35px;height:35px;">
+                                            <i class="fas fa-user small"></i>
+                                        </div>
+                                    {% endif %}
+                                    <strong>{{ user.name }}</strong>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3"><small>{{ user.email }}</small></td>
+                            <td class="px-4 py-3">
+                                <span class="badge {% if user.role == 'admin' %}bg-danger{% else %}bg-primary{% endif %} bg-opacity-10 {% if user.role == 'admin' %}text-danger{% else %}text-primary{% endif %} rounded-pill">
+                                    {{ user.role | capitalize }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                {% if user.disabled %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill"><i class="fas fa-ban me-1"></i>Disabled</span>
+                                {% elif user.approved %}
+                                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill"><i class="fas fa-check me-1"></i>Approved</span>
+                                {% else %}
+                                    <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill"><i class="fas fa-clock me-1"></i>Pending</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3"><small class="text-muted">{{ user.created_at.strftime('%b %d, %Y') if user.created_at else 'N/A' }}</small></td>
+                            <td class="px-4 py-3">
+                                <div class="d-flex gap-1 flex-wrap">
+                                    {% if not user.approved and not user.disabled %}
+                                        <a href="{{ url_for('admin.approve_user', user_id=user.id) }}" class="btn btn-success btn-sm rounded-pill" title="Approve">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                    {% endif %}
+                                    {% if user.disabled %}
+                                        <a href="{{ url_for('admin.enable_user', user_id=user.id) }}" class="btn btn-info btn-sm rounded-pill" title="Enable">
+                                            <i class="fas fa-toggle-on"></i>
+                                        </a>
+                                    {% else %}
+                                        {% if user.id != current_user.id %}
+                                        <a href="{{ url_for('admin.disable_user', user_id=user.id) }}" class="btn btn-warning btn-sm rounded-pill" title="Disable">
+                                            <i class="fas fa-toggle-off"></i>
+                                        </a>
+                                        {% endif %}
+                                    {% endif %}
+                                    {% if user.id != current_user.id %}
+                                    <a href="{{ url_for('admin.delete_user', user_id=user.id) }}" class="btn btn-danger btn-sm rounded-pill" title="Delete" onclick="return confirm('Are you sure you want to delete this user?');">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if total_pages > 1 %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item {% if page <= 1 %}disabled{% endif %}"><a class="page-link rounded-pill" href="?page={{ page-1 }}&search={{ search }}&role={{ role_filter }}">&laquo;</a></li>
+                {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {% if p == page %}active{% endif %}"><a class="page-link rounded-pill" href="?page={{ p }}&search={{ search }}&role={{ role_filter }}">{{ p }}</a></li>
+                {% endfor %}
+                <li class="page-item {% if page >= total_pages %}disabled{% endif %}"><a class="page-link rounded-pill" href="?page={{ page+1 }}&search={{ search }}&role={{ role_filter }}">&raquo;</a></li>
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

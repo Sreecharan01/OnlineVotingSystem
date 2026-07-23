@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - ElectVote{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg fixed-top glass-navbar scrolled">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold" href="{{ url_for('voter.dashboard') }}">
+            <i class="fas fa-vote-yea me-2"></i>Elect<span class="text-accent">Vote</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#voterNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="voterNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item"><a class="nav-link active" href="{{ url_for('voter.dashboard') }}"><i class="fas fa-tachometer-alt me-1"></i>Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('voter.elections') }}"><i class="fas fa-poll me-1"></i>Elections</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('voter.profile') }}"><i class="fas fa-user me-1"></i>Profile</a></li>
+                <li class="nav-item ms-lg-2">
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill me-2" onclick="toggleDarkMode()"><i class="fas fa-moon"></i></button>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" data-bs-toggle="dropdown">
+                        <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width:32px;height:32px;">
+                            {% if current_user.profile_picture %}
+                                <img src="{{ url_for('static', filename='uploads/' + current_user.profile_picture) }}" class="rounded-circle" style="width:32px;height:32px;object-fit:cover;">
+                            {% else %}
+                                <i class="fas fa-user small"></i>
+                            {% endif %}
+                        </div>
+                        {{ current_user.name }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{{ url_for('voter.profile') }}"><i class="fas fa-user me-2"></i>Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-content" style="padding-top: 80px;">
+    <div class="container-fluid px-4">
+        <!-- Welcome Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-800 mb-1">Welcome, {{ current_user.name }}! 👋</h3>
+                <p class="text-muted mb-0">Here's what's happening with elections today.</p>
+            </div>
+            <a href="{{ url_for('voter.elections') }}" class="btn btn-primary rounded-pill">
+                <i class="fas fa-poll me-2"></i>View All Elections
+            </a>
+        </div>
+
+        <!-- Active Elections -->
+        <div class="mb-5">
+            <h5 class="fw-700 mb-3"><i class="fas fa-bolt text-warning me-2"></i>Active Elections</h5>
+            {% if active_elections %}
+            <div class="row g-4">
+                {% for election in active_elections %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="election-card glass-card h-100">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">
+                                <i class="fas fa-circle fa-xs me-1 pulse-dot"></i>Active
+                            </span>
+                            <small class="text-muted"><i class="fas fa-clock me-1"></i>Ends: {{ election.end_date.strftime('%b %d, %Y') if election.end_date else 'TBD' }}</small>
+                        </div>
+                        <h5 class="fw-700">{{ election.title }}</h5>
+                        <p class="text-muted small">{{ election.description[:100] }}{{ '...' if election.description|length > 100 else '' }}</p>
+
+                        {% if election.end_date %}
+                        <div class="countdown-timer mb-3" data-end="{{ election.end_date.isoformat() }}">
+                            <div class="d-flex gap-2">
+                                <div class="countdown-item">
+                                    <span class="countdown-value days">00</span>
+                                    <span class="countdown-label">Days</span>
+                                </div>
+                                <div class="countdown-item">
+                                    <span class="countdown-value hours">00</span>
+                                    <span class="countdown-label">Hrs</span>
+                                </div>
+                                <div class="countdown-item">
+                                    <span class="countdown-value minutes">00</span>
+                                    <span class="countdown-label">Min</span>
+                                </div>
+                                <div class="countdown-item">
+                                    <span class="countdown-value seconds">00</span>
+                                    <span class="countdown-label">Sec</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('voter.vote', election_id=election.id) }}" class="btn btn-primary btn-sm rounded-pill flex-fill">
+                                <i class="fas fa-vote-yea me-1"></i>Vote Now
+                            </a>
+                            <a href="{{ url_for('voter.election_details', election_id=election.id) }}" class="btn btn-outline-primary btn-sm rounded-pill">
+                                <i class="fas fa-info-circle"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="glass-card p-4 text-center">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No Active Elections</h5>
+                <p class="text-muted small">There are no elections currently running. Check back later!</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Upcoming Elections -->
+        <div class="mb-5">
+            <h5 class="fw-700 mb-3"><i class="fas fa-calendar-alt text-info me-2"></i>Upcoming Elections</h5>
+            {% if upcoming_elections %}
+            <div class="row g-4">
+                {% for election in upcoming_elections %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="election-card glass-card h-100">
+                        <span class="badge bg-info bg-opacity-10 text-info rounded-pill px-3 mb-3">
+                            <i class="fas fa-clock me-1"></i>Upcoming
+                        </span>
+                        <h5 class="fw-700">{{ election.title }}</h5>
+                        <p class="text-muted small">{{ election.description[:100] }}{{ '...' if election.description|length > 100 else '' }}</p>
+                        <p class="small mb-2">
+                            <i class="fas fa-calendar me-1 text-primary"></i>
+                            Starts: {{ election.start_date.strftime('%b %d, %Y %H:%M') if election.start_date else 'TBD' }}
+                        </p>
+                        <a href="{{ url_for('voter.election_details', election_id=election.id) }}" class="btn btn-outline-info btn-sm rounded-pill w-100">
+                            <i class="fas fa-eye me-1"></i>View Details
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="glass-card p-4 text-center">
+                <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No Upcoming Elections</h5>
+                <p class="text-muted small">There are no scheduled elections at the moment.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Vote History -->
+        <div class="mb-5">
+            <h5 class="fw-700 mb-3"><i class="fas fa-history text-secondary me-2"></i>Your Vote History</h5>
+            {% if vote_history %}
+            <div class="glass-card p-0 overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th class="px-4 py-3">Election</th>
+                                <th class="px-4 py-3">Candidate</th>
+                                <th class="px-4 py-3">Date</th>
+                                <th class="px-4 py-3">Status</th>
+                                <th class="px-4 py-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in vote_history %}
+                            <tr>
+                                <td class="px-4 py-3 fw-600">{{ item.election.title if item.election else 'N/A' }}</td>
+                                <td class="px-4 py-3">{{ item.candidate.name if item.candidate else 'N/A' }}</td>
+                                <td class="px-4 py-3"><small>{{ item.timestamp.strftime('%b %d, %Y %H:%M') if item.timestamp else 'N/A' }}</small></td>
+                                <td class="px-4 py-3">
+                                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill">
+                                        <i class="fas fa-check-circle me-1"></i>Voted
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    {% if item.election %}
+                                    <a href="{{ url_for('voter.results', election_id=item.election.id) }}" class="btn btn-sm btn-outline-primary rounded-pill">
+                                        <i class="fas fa-chart-bar me-1"></i>Results
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% else %}
+            <div class="glass-card p-4 text-center">
+                <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No Vote History</h5>
+                <p class="text-muted small">You haven't voted in any elections yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/countdown.js') }}"></script>
+{% endblock %}

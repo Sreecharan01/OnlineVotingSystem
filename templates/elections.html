@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Elections - ElectVote{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg fixed-top glass-navbar scrolled">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold" href="{{ url_for('voter.dashboard') }}">
+            <i class="fas fa-vote-yea me-2"></i>Elect<span class="text-accent">Vote</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#voterNav"><span class="navbar-toggler-icon"></span></button>
+        <div class="collapse navbar-collapse" id="voterNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('voter.dashboard') }}"><i class="fas fa-tachometer-alt me-1"></i>Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link active" href="{{ url_for('voter.elections') }}"><i class="fas fa-poll me-1"></i>Elections</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('voter.profile') }}"><i class="fas fa-user me-1"></i>Profile</a></li>
+                <li class="nav-item ms-lg-2"><button class="btn btn-sm btn-outline-secondary rounded-pill me-2" onclick="toggleDarkMode()"><i class="fas fa-moon"></i></button></li>
+                <li class="nav-item"><a class="btn btn-sm btn-outline-danger rounded-pill" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-1"></i>Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-content" style="padding-top: 80px;">
+    <div class="container-fluid px-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <h3 class="fw-800 mb-0"><i class="fas fa-poll me-2"></i>Elections</h3>
+            <form class="d-flex gap-2" method="GET">
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" name="search" placeholder="Search elections..." value="{{ search }}">
+                </div>
+                <select class="form-select" name="status" style="width: auto;" onchange="this.form.submit()">
+                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Status</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                    <option value="upcoming" {% if status_filter == 'upcoming' %}selected{% endif %}>Upcoming</option>
+                    <option value="ended" {% if status_filter == 'ended' %}selected{% endif %}>Ended</option>
+                </select>
+                <button class="btn btn-primary rounded-pill" type="submit"><i class="fas fa-filter"></i></button>
+            </form>
+        </div>
+
+        {% if elections %}
+        <div class="row g-4">
+            {% for election in elections %}
+            <div class="col-md-6 col-lg-4">
+                <div class="election-card glass-card h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        {% if election.status == 'active' %}
+                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3"><i class="fas fa-circle fa-xs me-1 pulse-dot"></i>Active</span>
+                        {% elif election.status == 'upcoming' %}
+                            <span class="badge bg-info bg-opacity-10 text-info rounded-pill px-3"><i class="fas fa-clock me-1"></i>Upcoming</span>
+                        {% elif election.status == 'ended' %}
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3"><i class="fas fa-flag-checkered me-1"></i>Ended</span>
+                        {% else %}
+                            <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3"><i class="fas fa-ban me-1"></i>{{ election.status|capitalize }}</span>
+                        {% endif %}
+
+                        {% if election.id in voted_elections %}
+                            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill"><i class="fas fa-check me-1"></i>Voted</span>
+                        {% endif %}
+                    </div>
+
+                    <h5 class="fw-700">{{ election.title }}</h5>
+                    <p class="text-muted small">{{ election.description[:120] }}{{ '...' if election.description|length > 120 else '' }}</p>
+
+                    <div class="mb-3">
+                        <small class="d-block text-muted"><i class="fas fa-calendar-alt me-1"></i>Start: {{ election.start_date.strftime('%b %d, %Y %H:%M') if election.start_date else 'TBD' }}</small>
+                        <small class="d-block text-muted"><i class="fas fa-calendar-check me-1"></i>End: {{ election.end_date.strftime('%b %d, %Y %H:%M') if election.end_date else 'TBD' }}</small>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-auto">
+                        {% if election.status == 'active' and election.id not in voted_elections %}
+                            <a href="{{ url_for('voter.vote', election_id=election.id) }}" class="btn btn-primary btn-sm rounded-pill flex-fill btn-glow">
+                                <i class="fas fa-vote-yea me-1"></i>Vote Now
+                            </a>
+                        {% elif election.status == 'ended' %}
+                            <a href="{{ url_for('voter.results', election_id=election.id) }}" class="btn btn-outline-primary btn-sm rounded-pill flex-fill">
+                                <i class="fas fa-chart-bar me-1"></i>View Results
+                            </a>
+                        {% endif %}
+                        <a href="{{ url_for('voter.election_details', election_id=election.id) }}" class="btn btn-outline-secondary btn-sm rounded-pill">
+                            <i class="fas fa-info-circle"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                    <a class="page-link rounded-pill" href="?page={{ page-1 }}&search={{ search }}&status={{ status_filter }}">&laquo;</a>
+                </li>
+                {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {% if p == page %}active{% endif %}">
+                    <a class="page-link rounded-pill" href="?page={{ p }}&search={{ search }}&status={{ status_filter }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+                <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+                    <a class="page-link rounded-pill" href="?page={{ page+1 }}&search={{ search }}&status={{ status_filter }}">&raquo;</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="glass-card p-5 text-center">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No Elections Found</h5>
+            <p class="text-muted">{% if search %}No elections matching "{{ search }}".{% else %}No elections available at the moment.{% endif %}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

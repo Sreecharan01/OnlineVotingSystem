@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard - ElectVote{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg fixed-top glass-navbar scrolled">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold" href="{{ url_for('admin.dashboard') }}">
+            <i class="fas fa-vote-yea me-2"></i>Elect<span class="text-accent">Vote</span>
+            <span class="badge bg-danger rounded-pill ms-2 small">Admin</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav"><span class="navbar-toggler-icon"></span></button>
+        <div class="collapse navbar-collapse" id="adminNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item"><a class="nav-link active" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-tachometer-alt me-1"></i>Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_users') }}"><i class="fas fa-users me-1"></i>Users</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_elections') }}"><i class="fas fa-poll me-1"></i>Elections</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_candidates') }}"><i class="fas fa-user-tie me-1"></i>Candidates</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.analytics') }}"><i class="fas fa-chart-line me-1"></i>Analytics</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.settings') }}"><i class="fas fa-cog me-1"></i>Settings</a></li>
+                <li class="nav-item ms-lg-2"><button class="btn btn-sm btn-outline-secondary rounded-pill me-2" onclick="toggleDarkMode()"><i class="fas fa-moon"></i></button></li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="fas fa-user-shield me-1"></i>{{ current_user.name }}</a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{{ url_for('voter.profile') }}"><i class="fas fa-user me-2"></i>Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-content" style="padding-top: 80px;">
+    <div class="container-fluid px-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-800 mb-1">Admin Dashboard 🛡️</h3>
+                <p class="text-muted mb-0">Overview of the voting system.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('admin.export_users_csv') }}" class="btn btn-outline-success rounded-pill btn-sm">
+                    <i class="fas fa-file-csv me-1"></i>Export Users
+                </a>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="stat-card glass-card p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Total Users</p>
+                            <h3 class="fw-800 mb-0">{{ total_users }}</h3>
+                        </div>
+                        <div class="stat-icon bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width:50px;height:50px;">
+                            <i class="fas fa-users text-primary fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card glass-card p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Total Elections</p>
+                            <h3 class="fw-800 mb-0">{{ total_elections }}</h3>
+                        </div>
+                        <div class="stat-icon bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width:50px;height:50px;">
+                            <i class="fas fa-poll text-success fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card glass-card p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Active Elections</p>
+                            <h3 class="fw-800 mb-0 text-success">{{ active_elections }}</h3>
+                        </div>
+                        <div class="stat-icon bg-info bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width:50px;height:50px;">
+                            <i class="fas fa-bolt text-info fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card glass-card p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Total Candidates</p>
+                            <h3 class="fw-800 mb-0">{{ total_candidates }}</h3>
+                        </div>
+                        <div class="stat-icon bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width:50px;height:50px;">
+                            <i class="fas fa-user-tie text-warning fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-6 col-lg-4">
+                <div class="stat-card glass-card p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Total Votes</p>
+                            <h3 class="fw-800 mb-0 text-primary" id="liveVoteCount">{{ total_votes }}</h3>
+                        </div>
+                        <div class="stat-icon bg-danger bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width:50px;height:50px;">
+                            <i class="fas fa-vote-yea text-danger fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-4">
+                <div class="stat-card glass-card p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Pending Approvals</p>
+                            <h3 class="fw-800 mb-0 text-warning">{{ pending_approvals }}</h3>
+                        </div>
+                        <div class="stat-icon bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width:50px;height:50px;">
+                            <i class="fas fa-clock text-warning fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-4">
+                <div class="stat-card glass-card p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Registered Voters</p>
+                            <h3 class="fw-800 mb-0">{{ total_voters }}</h3>
+                        </div>
+                        <div class="stat-icon bg-purple bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width:50px;height:50px;">
+                            <i class="fas fa-id-card text-purple fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Live Election Votes -->
+            <div class="col-lg-6">
+                <div class="glass-card p-4">
+                    <h5 class="fw-700 mb-3"><i class="fas fa-bolt text-warning me-2"></i>Live Election Votes</h5>
+                    {% if live_data %}
+                        {% for item in live_data %}
+                        <div class="d-flex justify-content-between align-items-center p-3 rounded-3 mb-2" style="background: var(--bg-secondary);">
+                            <div>
+                                <h6 class="fw-600 mb-0">{{ item.election.title }}</h6>
+                                <small class="text-muted">Active</small>
+                            </div>
+                            <span class="badge bg-primary rounded-pill fs-6 px-3">{{ item.votes }} votes</span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center"><i class="fas fa-inbox me-2"></i>No active elections.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Activities -->
+            <div class="col-lg-6">
+                <div class="glass-card p-4">
+                    <h5 class="fw-700 mb-3"><i class="fas fa-history text-info me-2"></i>Recent Activities</h5>
+                    <div class="activity-list">
+                        {% for log in recent_activities %}
+                        <div class="activity-item d-flex align-items-start mb-3">
+                            <div class="activity-dot me-3 mt-1"></div>
+                            <div>
+                                <p class="mb-0 small"><strong>{{ log.user }}</strong> — {{ log.action }}</p>
+                                <small class="text-muted">{{ log.time.strftime('%b %d, %Y %H:%M') if log.time else '' }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if not recent_activities %}
+                        <p class="text-muted text-center"><i class="fas fa-inbox me-2"></i>No recent activities.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Live vote count update
+setInterval(function() {
+    fetch('/api/election/stats')
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('liveVoteCount').textContent = data.total_votes;
+        })
+        .catch(() => {});
+}, 10000);
+</script>
+{% endblock %}

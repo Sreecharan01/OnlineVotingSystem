@@ -1,0 +1,661 @@
+{% extends "base.html" %}
+
+{% block title %}ElectVote - Secure Online Voting System{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg fixed-top glass-navbar" id="mainNav">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/">
+            <i class="fas fa-vote-yea me-2"></i>Elect<span class="text-accent">Vote</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+                <li class="nav-item"><a class="nav-link" href="#how-it-works">How It Works</a></li>
+                <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+                <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
+                <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+                <li class="nav-item ms-lg-3">
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill me-2" id="darkModeToggle" onclick="toggleDarkMode()">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <a class="btn btn-outline-primary rounded-pill me-2" href="{{ url_for('auth.login') }}">
+                        <i class="fas fa-sign-in-alt me-1"></i>Login
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="btn btn-primary rounded-pill btn-glow" href="{{ url_for('auth.register') }}">
+                        <i class="fas fa-user-plus me-1"></i>Register
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section" id="hero">
+    <div class="hero-bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+        <div class="shape shape-4"></div>
+    </div>
+    <div class="container">
+        <div class="row align-items-center min-vh-100">
+            <div class="col-lg-6 hero-content" data-aos="fade-right">
+                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill mb-3 hero-badge">
+                    <i class="fas fa-shield-alt me-1"></i>Trusted & Secure Platform
+                </span>
+                <h1 class="display-3 fw-900 hero-title">
+                    Your Vote,<br>
+                    <span class="gradient-text">Your Voice,</span><br>
+                    Your Future.
+                </h1>
+                <p class="lead text-muted mb-4 hero-subtitle">
+                    ElectVote provides a secure, transparent, and user-friendly online voting platform. 
+                    Participate in elections from anywhere with confidence that your vote counts.
+                </p>
+                <div class="hero-cta">
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg rounded-pill btn-glow me-3 px-4">
+                        <i class="fas fa-rocket me-2"></i>Get Started
+                    </a>
+                    <a href="#how-it-works" class="btn btn-outline-secondary btn-lg rounded-pill px-4">
+                        <i class="fas fa-play-circle me-2"></i>Learn More
+                    </a>
+                </div>
+                <div class="hero-stats mt-5">
+                    <div class="row g-4">
+                        <div class="col-4">
+                            <div class="stat-item">
+                                <h3 class="counter fw-800" data-target="{{ total_users }}">0</h3>
+                                <p class="text-muted small mb-0">Registered Voters</p>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-item">
+                                <h3 class="counter fw-800" data-target="{{ total_elections }}">0</h3>
+                                <p class="text-muted small mb-0">Elections Held</p>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-item">
+                                <h3 class="counter fw-800" data-target="{{ total_votes }}">0</h3>
+                                <p class="text-muted small mb-0">Votes Casted</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 hero-illustration" data-aos="fade-left">
+                <div class="hero-image-wrapper">
+                    <div class="floating-card card-1 glass-card">
+                        <i class="fas fa-check-circle text-success fa-2x"></i>
+                        <span>Vote Verified</span>
+                    </div>
+                    <div class="floating-card card-2 glass-card">
+                        <i class="fas fa-lock text-primary fa-2x"></i>
+                        <span>End-to-End Encrypted</span>
+                    </div>
+                    <div class="floating-card card-3 glass-card">
+                        <i class="fas fa-chart-pie text-warning fa-2x"></i>
+                        <span>Real-time Results</span>
+                    </div>
+                    <div class="hero-main-visual">
+                        <div class="ballot-box">
+                            <div class="ballot-top"></div>
+                            <div class="ballot-body">
+                                <i class="fas fa-vote-yea fa-4x text-white"></i>
+                            </div>
+                            <div class="ballot-paper"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="scroll-indicator">
+        <a href="#features" class="scroll-down">
+            <i class="fas fa-chevron-down"></i>
+        </a>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="section-padding" id="features">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill mb-3">
+                <i class="fas fa-star me-1"></i>Features
+            </span>
+            <h2 class="display-5 fw-800">Why Choose <span class="gradient-text">ElectVote?</span></h2>
+            <p class="text-muted mx-auto" style="max-width: 600px;">
+                Our platform is built with security, transparency, and ease-of-use at its core.
+            </p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="feature-card glass-card h-100">
+                    <div class="feature-icon bg-primary bg-opacity-10">
+                        <i class="fas fa-shield-alt text-primary fa-2x"></i>
+                    </div>
+                    <h5 class="fw-700 mt-3">Secure Voting</h5>
+                    <p class="text-muted">Military-grade encryption ensures your vote is protected from tampering and unauthorized access.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="feature-card glass-card h-100">
+                    <div class="feature-icon bg-success bg-opacity-10">
+                        <i class="fas fa-user-check text-success fa-2x"></i>
+                    </div>
+                    <h5 class="fw-700 mt-3">Verified Identity</h5>
+                    <p class="text-muted">Multi-layer verification ensures only authorized voters can participate in elections.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="feature-card glass-card h-100">
+                    <div class="feature-icon bg-warning bg-opacity-10">
+                        <i class="fas fa-chart-bar text-warning fa-2x"></i>
+                    </div>
+                    <h5 class="fw-700 mt-3">Real-time Results</h5>
+                    <p class="text-muted">Watch live results as votes pour in with interactive charts and analytics.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="400">
+                <div class="feature-card glass-card h-100">
+                    <div class="feature-icon bg-info bg-opacity-10">
+                        <i class="fas fa-mobile-alt text-info fa-2x"></i>
+                    </div>
+                    <h5 class="fw-700 mt-3">Mobile Friendly</h5>
+                    <p class="text-muted">Vote from any device — desktop, tablet, or mobile. Fully responsive design.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="500">
+                <div class="feature-card glass-card h-100">
+                    <div class="feature-icon bg-danger bg-opacity-10">
+                        <i class="fas fa-receipt text-danger fa-2x"></i>
+                    </div>
+                    <h5 class="fw-700 mt-3">Vote Receipt</h5>
+                    <p class="text-muted">Receive instant confirmation and a digital receipt after casting your vote.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="600">
+                <div class="feature-card glass-card h-100">
+                    <div class="feature-icon bg-purple bg-opacity-10">
+                        <i class="fas fa-clock text-purple fa-2x"></i>
+                    </div>
+                    <h5 class="fw-700 mt-3">24/7 Availability</h5>
+                    <p class="text-muted">Vote at your convenience. Our platform is available around the clock during election periods.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="section-padding bg-light-custom" id="how-it-works">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill mb-3">
+                <i class="fas fa-cogs me-1"></i>Process
+            </span>
+            <h2 class="display-5 fw-800">How <span class="gradient-text">Voting Works</span></h2>
+            <p class="text-muted mx-auto" style="max-width: 600px;">
+                Cast your vote in just a few simple steps. Our streamlined process makes voting effortless.
+            </p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="100">
+                <div class="step-card text-center">
+                    <div class="step-number">1</div>
+                    <div class="step-icon">
+                        <i class="fas fa-user-plus fa-2x text-primary"></i>
+                    </div>
+                    <h5 class="fw-700 mt-3">Register</h5>
+                    <p class="text-muted small">Create your account with a valid email and wait for admin verification.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="200">
+                <div class="step-card text-center">
+                    <div class="step-number">2</div>
+                    <div class="step-icon">
+                        <i class="fas fa-sign-in-alt fa-2x text-success"></i>
+                    </div>
+                    <h5 class="fw-700 mt-3">Login</h5>
+                    <p class="text-muted small">Once approved, log in securely to access active elections.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="300">
+                <div class="step-card text-center">
+                    <div class="step-number">3</div>
+                    <div class="step-icon">
+                        <i class="fas fa-vote-yea fa-2x text-warning"></i>
+                    </div>
+                    <h5 class="fw-700 mt-3">Vote</h5>
+                    <p class="text-muted small">Browse candidates, make your choice, and confirm your vote.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="400">
+                <div class="step-card text-center">
+                    <div class="step-number">4</div>
+                    <div class="step-icon">
+                        <i class="fas fa-chart-pie fa-2x text-danger"></i>
+                    </div>
+                    <h5 class="fw-700 mt-3">Results</h5>
+                    <p class="text-muted small">View live results with interactive charts after the election ends.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="section-padding" id="about">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6" data-aos="fade-right">
+                <div class="about-visual">
+                    <div class="about-card glass-card p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="about-icon bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                                <i class="fas fa-landmark text-primary fa-2x"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0 fw-700">ElectVote Platform</h5>
+                                <small class="text-muted">Trusted Since 2024</small>
+                            </div>
+                        </div>
+                        <div class="row g-3 mt-2">
+                            <div class="col-6">
+                                <div class="mini-stat p-3 rounded-3 bg-primary bg-opacity-5">
+                                    <h4 class="fw-800 text-primary mb-0">99.9%</h4>
+                                    <small class="text-muted">Uptime</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mini-stat p-3 rounded-3 bg-success bg-opacity-5">
+                                    <h4 class="fw-800 text-success mb-0">256-bit</h4>
+                                    <small class="text-muted">Encryption</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mini-stat p-3 rounded-3 bg-warning bg-opacity-5">
+                                    <h4 class="fw-800 text-warning mb-0">0</h4>
+                                    <small class="text-muted">Breaches</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mini-stat p-3 rounded-3 bg-info bg-opacity-5">
+                                    <h4 class="fw-800 text-info mb-0">24/7</h4>
+                                    <small class="text-muted">Support</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6" data-aos="fade-left">
+                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill mb-3">
+                    <i class="fas fa-info-circle me-1"></i>About Us
+                </span>
+                <h2 class="display-5 fw-800">Empowering <span class="gradient-text">Democracy</span> Through Technology</h2>
+                <p class="text-muted mb-4">
+                    ElectVote is a state-of-the-art online voting platform designed to make elections 
+                    more accessible, secure, and transparent. Our mission is to ensure every eligible voter 
+                    can exercise their democratic right with ease and confidence.
+                </p>
+                <div class="about-features">
+                    <div class="d-flex align-items-start mb-3">
+                        <i class="fas fa-check-circle text-success me-3 mt-1"></i>
+                        <div>
+                            <h6 class="fw-700 mb-1">Tamper-Proof System</h6>
+                            <p class="text-muted small mb-0">Every vote is cryptographically secured and verified.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start mb-3">
+                        <i class="fas fa-check-circle text-success me-3 mt-1"></i>
+                        <div>
+                            <h6 class="fw-700 mb-1">Transparent Process</h6>
+                            <p class="text-muted small mb-0">Full audit trail and real-time monitoring capabilities.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start">
+                        <i class="fas fa-check-circle text-success me-3 mt-1"></i>
+                        <div>
+                            <h6 class="fw-700 mb-1">Inclusive Access</h6>
+                            <p class="text-muted small mb-0">Designed for accessibility, supporting all users regardless of technical ability.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="section-padding bg-light-custom" id="testimonials">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill mb-3">
+                <i class="fas fa-quote-left me-1"></i>Testimonials
+            </span>
+            <h2 class="display-5 fw-800">What People <span class="gradient-text">Say</span></h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="testimonial-card glass-card h-100">
+                    <div class="stars mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <p class="text-muted mb-3">"ElectVote made our university elections seamless. The results were instant and everyone trusted the process."</p>
+                    <div class="d-flex align-items-center">
+                        <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:45px;height:45px;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-600">Dr. Sarah Johnson</h6>
+                            <small class="text-muted">University Dean</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="testimonial-card glass-card h-100">
+                    <div class="stars mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <p class="text-muted mb-3">"The security features gave our organization confidence to move elections online. Highly recommended!"</p>
+                    <div class="d-flex align-items-center">
+                        <div class="avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:45px;height:45px;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-600">Mark Williams</h6>
+                            <small class="text-muted">Corporate Secretary</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="testimonial-card glass-card h-100">
+                    <div class="stars mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star-half-alt text-warning"></i>
+                    </div>
+                    <p class="text-muted mb-3">"Easy to use interface, real-time results, and excellent admin dashboard. Perfect for our club elections."</p>
+                    <div class="d-flex align-items-center">
+                        <div class="avatar bg-warning text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:45px;height:45px;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-600">Emily Chen</h6>
+                            <small class="text-muted">Student President</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="section-padding" id="faq">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill mb-3">
+                <i class="fas fa-question-circle me-1"></i>FAQ
+            </span>
+            <h2 class="display-5 fw-800">Frequently Asked <span class="gradient-text">Questions</span></h2>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-8" data-aos="fade-up">
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item glass-card mb-3 border-0">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button fw-600" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                How do I register to vote?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-muted">
+                                Click the "Register" button, fill in your details including name, email, and a strong password. Your account will be reviewed and approved by an administrator before you can vote.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item glass-card mb-3 border-0">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-600" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                Is my vote secure and anonymous?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-muted">
+                                Yes! Your vote is encrypted and stored securely. While the system tracks that you have voted (to prevent duplicates), the specific vote is kept confidential.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item glass-card mb-3 border-0">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-600" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                Can I change my vote after submitting?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-muted">
+                                No, once a vote is submitted it is final. This ensures the integrity of the election process. Please review your choice carefully before confirming.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item glass-card mb-3 border-0">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-600" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                When are election results published?
+                            </button>
+                        </h2>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-muted">
+                                Results are available after the election period ends and the admin officially declares the results. You can view detailed analytics and winner information on the results page.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item glass-card mb-3 border-0">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-600" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                                What if I forget my password?
+                            </button>
+                        </h2>
+                        <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-muted">
+                                Click the "Forgot Password" link on the login page. Enter your registered email and follow the instructions to reset your password.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Section -->
+<section class="section-padding bg-light-custom" id="contact">
+    <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill mb-3">
+                <i class="fas fa-envelope me-1"></i>Contact
+            </span>
+            <h2 class="display-5 fw-800">Get In <span class="gradient-text">Touch</span></h2>
+            <p class="text-muted mx-auto" style="max-width:600px;">Have questions? We're here to help.</p>
+        </div>
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="contact-card glass-card text-center h-100">
+                    <div class="contact-icon bg-primary bg-opacity-10 rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width:70px;height:70px;">
+                        <i class="fas fa-envelope text-primary fa-2x"></i>
+                    </div>
+                    <h5 class="fw-700">Email</h5>
+                    <p class="text-muted">support@electvote.com</p>
+                </div>
+            </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="contact-card glass-card text-center h-100">
+                    <div class="contact-icon bg-success bg-opacity-10 rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width:70px;height:70px;">
+                        <i class="fas fa-phone text-success fa-2x"></i>
+                    </div>
+                    <h5 class="fw-700">Phone</h5>
+                    <p class="text-muted">+1 (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="contact-card glass-card text-center h-100">
+                    <div class="contact-icon bg-warning bg-opacity-10 rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width:70px;height:70px;">
+                        <i class="fas fa-map-marker-alt text-warning fa-2x"></i>
+                    </div>
+                    <h5 class="fw-700">Address</h5>
+                    <p class="text-muted">123 Democracy Lane, Digital City</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container text-center">
+        <h2 class="display-5 fw-800 text-white mb-3" data-aos="fade-up">Ready to Make Your Voice Heard?</h2>
+        <p class="text-white-50 mb-4 lead" data-aos="fade-up" data-aos-delay="100">
+            Join thousands of voters who trust ElectVote for secure, transparent elections.
+        </p>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg rounded-pill px-5 btn-glow" data-aos="fade-up" data-aos-delay="200">
+            <i class="fas fa-rocket me-2"></i>Register Now — It's Free
+        </a>
+    </div>
+</section>
+{% endblock %}
+
+{% block footer %}
+<footer class="footer-section">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <h5 class="fw-700 text-white mb-3">
+                    <i class="fas fa-vote-yea me-2"></i>Elect<span class="text-accent">Vote</span>
+                </h5>
+                <p class="text-white-50 small">
+                    A secure, transparent, and user-friendly online voting platform empowering democracy through technology.
+                </p>
+                <div class="social-links">
+                    <a href="#" class="me-3 text-white-50"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="me-3 text-white-50"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="me-3 text-white-50"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" class="text-white-50"><i class="fab fa-github"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-2">
+                <h6 class="fw-700 text-white mb-3">Quick Links</h6>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><a href="#features" class="text-white-50 text-decoration-none small">Features</a></li>
+                    <li class="mb-2"><a href="#how-it-works" class="text-white-50 text-decoration-none small">How It Works</a></li>
+                    <li class="mb-2"><a href="#about" class="text-white-50 text-decoration-none small">About Us</a></li>
+                    <li class="mb-2"><a href="#faq" class="text-white-50 text-decoration-none small">FAQ</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-3">
+                <h6 class="fw-700 text-white mb-3">Legal</h6>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none small">Privacy Policy</a></li>
+                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none small">Terms of Service</a></li>
+                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none small">Cookie Policy</a></li>
+                    <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none small">GDPR Compliance</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-3">
+                <h6 class="fw-700 text-white mb-3">Contact</h6>
+                <ul class="list-unstyled">
+                    <li class="mb-2 text-white-50 small"><i class="fas fa-envelope me-2"></i>support@electvote.com</li>
+                    <li class="mb-2 text-white-50 small"><i class="fas fa-phone me-2"></i>+1 (555) 123-4567</li>
+                    <li class="mb-2 text-white-50 small"><i class="fas fa-map-marker-alt me-2"></i>123 Democracy Lane</li>
+                </ul>
+            </div>
+        </div>
+        <hr class="border-secondary my-4">
+        <div class="text-center">
+            <p class="text-white-50 small mb-0">&copy; 2024 ElectVote. All rights reserved. Built with <i class="fas fa-heart text-danger"></i> for Democracy.</p>
+        </div>
+    </div>
+</footer>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Counter animation for hero stats
+    document.addEventListener('DOMContentLoaded', function() {
+        const counters = document.querySelectorAll('.counter');
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const counter = entry.target;
+                    const target = parseInt(counter.getAttribute('data-target'));
+                    animateCounter(counter, 0, target, 2000);
+                    observer.unobserve(counter);
+                }
+            });
+        });
+        counters.forEach(c => observer.observe(c));
+    });
+
+    function animateCounter(el, start, end, duration) {
+        let startTime = null;
+        function step(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const progress = Math.min((timestamp - startTime) / duration, 1);
+            el.textContent = Math.floor(progress * (end - start) + start).toLocaleString();
+            if (progress < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+    }
+
+    // Scroll animation
+    const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
+    const scrollObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-in');
+                scrollObserver.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('[data-aos]').forEach(el => {
+        el.classList.add('animate-hidden');
+        scrollObserver.observe(el);
+    });
+
+    // Navbar scroll effect
+    window.addEventListener('scroll', function() {
+        const nav = document.getElementById('mainNav');
+        if (window.scrollY > 50) {
+            nav.classList.add('scrolled');
+        } else {
+            nav.classList.remove('scrolled');
+        }
+    });
+</script>
+{% endblock %}

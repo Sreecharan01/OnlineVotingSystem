@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Login - ElectVote{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+    </div>
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-md-5 col-lg-4">
+                <div class="text-center mb-4">
+                    <a href="/" class="text-decoration-none">
+                        <h2 class="fw-800"><i class="fas fa-vote-yea text-primary me-2"></i>Elect<span class="text-accent">Vote</span></h2>
+                    </a>
+                    <p class="text-muted">Sign in to your account</p>
+                </div>
+
+                <div class="auth-card glass-card p-4">
+                    {% if forgot_password is defined and forgot_password %}
+                    <!-- Forgot Password Form -->
+                    <form method="POST" action="{{ url_for('auth.forgot_password') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <h5 class="fw-700 mb-3 text-center">Reset Password</h5>
+                        <p class="text-muted small text-center mb-4">Enter your email to receive reset instructions.</p>
+                        <div class="form-floating mb-3">
+                            <input type="email" class="form-control" id="email" name="email" placeholder="Email" required>
+                            <label for="email"><i class="fas fa-envelope me-2"></i>Email Address</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill btn-glow mb-3">
+                            <i class="fas fa-paper-plane me-2"></i>Send Reset Link
+                        </button>
+                        <div class="text-center">
+                            <a href="{{ url_for('auth.login') }}" class="text-decoration-none small">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Login
+                            </a>
+                        </div>
+                    </form>
+                    {% else %}
+                    <!-- Login Form -->
+                    <form method="POST" action="{{ url_for('auth.login') }}" id="loginForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="form-floating mb-3">
+                            <input type="email" class="form-control" id="email" name="email" placeholder="Email" required>
+                            <label for="email"><i class="fas fa-envelope me-2"></i>Email Address</label>
+                        </div>
+                        <div class="form-floating mb-3 position-relative">
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+                            <label for="password"><i class="fas fa-lock me-2"></i>Password</label>
+                            <button type="button" class="btn btn-link position-absolute end-0 top-50 translate-middle-y pe-3 text-muted" onclick="togglePassword('password')">
+                                <i class="fas fa-eye" id="password-toggle-icon"></i>
+                            </button>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="remember" name="remember">
+                                <label class="form-check-label small" for="remember">Remember me</label>
+                            </div>
+                            <a href="{{ url_for('auth.forgot_password') }}" class="small text-decoration-none">Forgot Password?</a>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill btn-glow mb-3">
+                            <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <div class="text-center mt-3">
+                        <span class="text-muted small">Don't have an account? </span>
+                        <a href="{{ url_for('auth.register') }}" class="text-decoration-none fw-600 small">Register here</a>
+                    </div>
+                </div>
+
+                <div class="text-center mt-3">
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="toggleDarkMode()">
+                        <i class="fas fa-moon me-1"></i>Dark Mode
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

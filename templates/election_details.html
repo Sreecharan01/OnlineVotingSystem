@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}{{ election.title }} - ElectVote{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg fixed-top glass-navbar scrolled">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold" href="{{ url_for('voter.dashboard') }}"><i class="fas fa-vote-yea me-2"></i>Elect<span class="text-accent">Vote</span></a>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="toggleDarkMode()"><i class="fas fa-moon"></i></button>
+            <a class="btn btn-sm btn-outline-primary rounded-pill" href="{{ url_for('voter.elections') }}"><i class="fas fa-arrow-left me-1"></i>Back</a>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-content" style="padding-top: 80px;">
+    <div class="container py-4">
+        <!-- Election Header -->
+        <div class="glass-card p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div>
+                    {% if election.status == 'active' %}
+                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 mb-2"><i class="fas fa-circle fa-xs me-1 pulse-dot"></i>Active</span>
+                    {% elif election.status == 'upcoming' %}
+                        <span class="badge bg-info bg-opacity-10 text-info rounded-pill px-3 mb-2"><i class="fas fa-clock me-1"></i>Upcoming</span>
+                    {% elif election.status == 'ended' %}
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3 mb-2"><i class="fas fa-flag-checkered me-1"></i>Ended</span>
+                    {% endif %}
+                    <h2 class="fw-800 mb-2">{{ election.title }}</h2>
+                    <p class="text-muted mb-3">{{ election.description }}</p>
+                    <div class="d-flex gap-4 flex-wrap">
+                        <small class="text-muted"><i class="fas fa-calendar-alt me-1"></i>Start: {{ election.start_date.strftime('%b %d, %Y %H:%M') if election.start_date else 'TBD' }}</small>
+                        <small class="text-muted"><i class="fas fa-calendar-check me-1"></i>End: {{ election.end_date.strftime('%b %d, %Y %H:%M') if election.end_date else 'TBD' }}</small>
+                        <small class="text-muted"><i class="fas fa-users me-1"></i>Total Votes: {{ total_votes }}</small>
+                    </div>
+                </div>
+                <div class="text-end">
+                    {% if election.is_active() and not has_voted %}
+                        <a href="{{ url_for('voter.vote', election_id=election.id) }}" class="btn btn-primary rounded-pill btn-glow">
+                            <i class="fas fa-vote-yea me-2"></i>Cast Your Vote
+                        </a>
+                    {% elif has_voted %}
+                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 fs-6">
+                            <i class="fas fa-check-circle me-1"></i>You have voted
+                        </span>
+                    {% endif %}
+                    {% if election.has_ended() %}
+                        <a href="{{ url_for('voter.results', election_id=election.id) }}" class="btn btn-outline-primary rounded-pill">
+                            <i class="fas fa-chart-bar me-2"></i>View Results
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Candidates -->
+        <h4 class="fw-700 mb-3"><i class="fas fa-users me-2"></i>Candidates</h4>
+        <div class="row g-4">
+            {% for candidate in candidates %}
+            <div class="col-md-6 col-lg-4">
+                <div class="glass-card h-100 candidate-profile-card">
+                    <div class="text-center mb-3">
+                        {% if candidate.photo %}
+                            <img src="{{ url_for('static', filename='uploads/' + candidate.photo) }}" class="rounded-circle mb-3" style="width:100px;height:100px;object-fit:cover;">
+                        {% else %}
+                            <div class="avatar-lg bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width:100px;height:100px;">
+                                <i class="fas fa-user fa-3x"></i>
+                            </div>
+                        {% endif %}
+                        <h5 class="fw-700 mb-1">{{ candidate.name }}</h5>
+                        {% if candidate.party %}
+                            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill">{{ candidate.party }}</span>
+                        {% endif %}
+                        {% if candidate.symbol %}
+                            <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill ms-1">{{ candidate.symbol }}</span>
+                        {% endif %}
+                    </div>
+                    {% if candidate.description %}
+                        <p class="text-muted small text-center">{{ candidate.description }}</p>
+                    {% endif %}
+                    <div class="text-center mt-3">
+                        <span class="text-muted small"><i class="fas fa-vote-yea me-1"></i>Votes: {{ candidate_votes.get(candidate.id, 0) }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if not candidates %}
+        <div class="glass-card p-4 text-center">
+            <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No Candidates Yet</h5>
+            <p class="text-muted">Candidates have not been added to this election.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

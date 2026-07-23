@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}Results - {{ election.title }} - ElectVote{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg fixed-top glass-navbar scrolled">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold" href="{{ url_for('voter.dashboard') }}"><i class="fas fa-vote-yea me-2"></i>Elect<span class="text-accent">Vote</span></a>
+        <div class="ms-auto d-flex gap-2">
+            <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="toggleDarkMode()"><i class="fas fa-moon"></i></button>
+            <a class="btn btn-sm btn-outline-primary rounded-pill" href="{{ url_for('voter.elections') }}"><i class="fas fa-arrow-left me-1"></i>Back</a>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-content" style="padding-top: 80px;">
+    <div class="container py-4">
+        <!-- Header -->
+        <div class="glass-card p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="fw-800 mb-1"><i class="fas fa-chart-bar me-2"></i>{{ election.title }} — Results</h2>
+                    <p class="text-muted mb-0">{{ election.description }}</p>
+                </div>
+                <div class="text-end">
+                    {% if election.status == 'active' %}
+                        <span class="badge bg-warning bg-opacity-10 text-warning fs-6 rounded-pill px-3 py-2">
+                            <i class="fas fa-clock me-1"></i>Results will be published after the election ends.
+                        </span>
+                    {% elif winner %}
+                        <a href="{{ url_for('voter.winner_page', election_id=election.id) }}" class="btn btn-success rounded-pill btn-glow">
+                            <i class="fas fa-trophy me-2"></i>View Winner
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if election.status != 'active' %}
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="glass-card p-4 text-center">
+                    <i class="fas fa-vote-yea fa-2x text-primary mb-2"></i>
+                    <h3 class="fw-800 counter-result" data-target="{{ total_votes }}">{{ total_votes }}</h3>
+                    <p class="text-muted small mb-0">Total Votes</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="glass-card p-4 text-center">
+                    <i class="fas fa-users fa-2x text-success mb-2"></i>
+                    <h3 class="fw-800">{{ results|length }}</h3>
+                    <p class="text-muted small mb-0">Candidates</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="glass-card p-4 text-center">
+                    <i class="fas fa-percentage fa-2x text-warning mb-2"></i>
+                    <h3 class="fw-800">{{ participation }}%</h3>
+                    <p class="text-muted small mb-0">Participation Rate</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Charts -->
+            <div class="col-lg-6">
+                <div class="glass-card p-4">
+                    <h5 class="fw-700 mb-3"><i class="fas fa-chart-pie me-2"></i>Vote Distribution</h5>
+                    <canvas id="pieChart" height="300"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="glass-card p-4">
+                    <h5 class="fw-700 mb-3"><i class="fas fa-chart-bar me-2"></i>Vote Count</h5>
+                    <canvas id="barChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Candidate Rankings -->
+        <div class="mt-4">
+            <h5 class="fw-700 mb-3"><i class="fas fa-trophy me-2"></i>Candidate Rankings</h5>
+            {% for item in results %}
+            <div class="glass-card p-3 mb-3">
+                <div class="d-flex align-items-center">
+                    <div class="rank-number me-3 {% if loop.index == 1 %}rank-gold{% elif loop.index == 2 %}rank-silver{% elif loop.index == 3 %}rank-bronze{% endif %}">
+                        {{ loop.index }}
+                    </div>
+                    {% if item.candidate.photo %}
+                        <img src="{{ url_for('static', filename='uploads/' + item.candidate.photo) }}" class="rounded-circle me-3" style="width:50px;height:50px;object-fit:cover;">
+                    {% else %}
+                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width:50px;height:50px;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    {% endif %}
+                    <div class="flex-fill">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="mb-0 fw-700">{{ item.candidate.name }}
+                                {% if item.candidate.party %}<small class="text-muted fw-normal ms-2">{{ item.candidate.party }}</small>{% endif %}
+                            </h6>
+                            <span class="fw-700">{{ item.votes }} votes ({{ item.percentage }}%)</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar {% if loop.index == 1 %}bg-success{% elif loop.index == 2 %}bg-primary{% elif loop.index == 3 %}bg-warning{% else %}bg-secondary{% endif %}"
+                                 style="width: {{ item.percentage }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <!-- Active election message -->
+        <div class="glass-card p-5 text-center">
+            <i class="fas fa-hourglass-half fa-4x text-warning mb-3 fa-spin-pulse"></i>
+            <h3 class="fw-800">Election In Progress</h3>
+            <p class="text-muted">Results will be published after the election period ends. Please check back later.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% if election.status != 'active' %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const resultsData = {{ results | tojson if results else '[]' | safe }};
+    const labels = resultsData.map(r => r.candidate.name);
+    const data = resultsData.map(r => r.votes);
+    const colors = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
+
+    if (document.getElementById('pieChart')) {
+        new Chart(document.getElementById('pieChart'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors.slice(0, data.length),
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true } }
+                }
+            }
+        });
+    }
+
+    if (document.getElementById('barChart')) {
+        new Chart(document.getElementById('barChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Votes',
+                    data: data,
+                    backgroundColor: colors.slice(0, data.length),
+                    borderRadius: 8,
+                    barThickness: 40
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                    x: { grid: { display: false } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+});
+</script>
+{% endif %}
+{% endblock %}
