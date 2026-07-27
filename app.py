@@ -13,10 +13,13 @@ from models.user import User
 app = Flask(__name__)
 app.config.from_object(Config)
 
-# Ensure upload directories exist
-os.makedirs(os.path.join(app.root_path, 'static', 'uploads'), exist_ok=True)
-os.makedirs(os.path.join(app.root_path, 'static', 'images'), exist_ok=True)
-os.makedirs(os.path.join(app.root_path, 'screenshots'), exist_ok=True)
+# Ensure upload directories exist (Wrap in try-except for serverless environments like Vercel)
+try:
+    os.makedirs(os.path.join(app.root_path, 'static', 'uploads'), exist_ok=True)
+    os.makedirs(os.path.join(app.root_path, 'static', 'images'), exist_ok=True)
+    os.makedirs(os.path.join(app.root_path, 'screenshots'), exist_ok=True)
+except OSError:
+    pass  # Serverless environments typically have read-only file systems except for /tmp
 
 # Initialize CORS for React dev server
 CORS(app, resources={r"/api/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173"]}})
