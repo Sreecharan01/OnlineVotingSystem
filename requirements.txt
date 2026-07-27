@@ -9,3 +9,4 @@ gunicorn==23.0.0
 dnspython==2.7.0
 email-validator==2.2.0
 Pillow==11.2.1
+PyJWT==2.8.0
